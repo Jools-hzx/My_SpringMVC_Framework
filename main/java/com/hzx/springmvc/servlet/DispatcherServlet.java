@@ -1,7 +1,6 @@
 package com.hzx.springmvc.servlet;
 
 import com.hzx.springmvc.annotation.RequestParam;
-import com.hzx.springmvc.bean.User;
 import com.hzx.springmvc.ioc.HzxSpringApplicationContext;
 import com.hzx.springmvc.mapper.HandlerMapper;
 import com.hzx.springmvc.mapper.HandlerMapping;
@@ -26,6 +25,7 @@ import java.util.Map;
  * @date 2024/4/19 17:30
  * @description: TODO
  */
+@SuppressWarnings("all")
 public class DispatcherServlet extends HttpServlet {
 
     public String contextPath;
@@ -74,10 +74,13 @@ public class DispatcherServlet extends HttpServlet {
     }
 
     //处理请求，查找处理器映射器，调用处理器执行
-    private void executeDispatch(HttpServletRequest request, HttpServletResponse response) throws InvocationTargetException, IllegalAccessException {
+    private void executeDispatch(HttpServletRequest request, HttpServletResponse response) throws InvocationTargetException, IllegalAccessException, ServletException, IOException {
         List<HandlerMapper> handlerMapperList = this.handlerMapping.getHandlerMapperList();
         //检查执行链是否被初始化
         if (handlerMapperList.isEmpty()) return;
+
+        //设置编码
+        request.setCharacterEncoding("utf-8");
 
         //获取请求的 uri 映射; 清除无关的项目路径
         String requestURI = request.getRequestURI().replace(this.contextPath, "");
@@ -88,8 +91,14 @@ public class DispatcherServlet extends HttpServlet {
                 //如果uri匹配，执行后续操作
                 Method method = handlerMapper.getMethod();
                 Object bean = handlerMapper.getBean();
+
+                //完成形参和实参的映射匹配
                 Object[] params = executeRequestParamMapping(method, request, response);
-                method.invoke(bean, params);
+                Object result = method.invoke(bean, params);
+
+                response.setContentType("text/html;charset=utf-8");
+                //完成视图解析
+                executeViewResolve(result, request, response);
                 return;
             }
         }
@@ -97,13 +106,35 @@ public class DispatcherServlet extends HttpServlet {
         handleNotFound(request, response);
     }
 
+    //该方法完成视图解析功能
+    private void executeViewResolve(Object result, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+        if (result instanceof String) {
+            if (((String) result).contains(":")) {  //判断返回结果是否需要跳转到页面
+                String type = ((String) result).split(":")[0];
+                String content = ((String) result).split(":")[1];
+                if ("forward".equals(type)) {
+                    //执行请求转发
+                    request.getRequestDispatcher(content).forward(request, response);
+                } else if ("redirect".equals(type)) {
+                    //执行重定向
+                    response.sendRedirect(this.contextPath + content);
+                }
+                return;
+            } else {
+                //否则默认按照请求转发处理
+                request.getRequestDispatcher((String) result).forward(request, response);
+                return;
+            }
+        }
+    }
+
     /**
      * 通过反射获取 Method 上的注解
      *
-     * @param method    目标方法
-     * @param request   HttpServletRequest
-     * @param response  HttpServletResponse
-     * @return  返回映射完成的实参列表；否则报错
+     * @param method   目标方法
+     * @param request  HttpServletRequest
+     * @param response HttpServletResponse
+     * @return 返回映射完成的实参列表；否则报错
      */
     private Object[] executeRequestParamMapping(Method method,
                                                 HttpServletRequest request,

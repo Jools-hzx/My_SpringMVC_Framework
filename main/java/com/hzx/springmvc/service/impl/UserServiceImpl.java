@@ -41,4 +41,13 @@ public class UserServiceImpl implements UserService {
         }
         return results;
     }
+
+    @Override
+    public Boolean login(String id, String name) {
+        if ("1".equals(id) && "AAA".equals(name)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }

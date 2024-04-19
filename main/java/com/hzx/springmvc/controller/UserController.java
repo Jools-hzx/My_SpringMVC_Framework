@@ -6,6 +6,7 @@ import com.hzx.springmvc.annotation.RequestMapping;
 import com.hzx.springmvc.annotation.RequestParam;
 import com.hzx.springmvc.bean.User;
 import com.hzx.springmvc.service.UserService;
+import jdk.nashorn.internal.ir.IfNode;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -25,6 +26,23 @@ public class UserController {
 
     @AutoWired
     private UserService userService;
+
+    @RequestMapping("/user/login")
+    public String login(HttpServletRequest request,
+                        HttpServletResponse response,
+                        @RequestParam("id") String id,
+                        @RequestParam("name") String name) {
+        Boolean login = userService.login(id, name);
+        if (login) {
+            request.setAttribute("name", name);
+//            return "forward:/login_ok.jsp";
+//            return "redirect:/login_ok.jsp";
+            return "/login_ok.jsp";
+        } else {
+            request.setAttribute("name", name);
+            return "forward:/login_error.jsp";
+        }
+    }
 
     @RequestMapping("/user/find")
     public void findUsers(HttpServletRequest request,
