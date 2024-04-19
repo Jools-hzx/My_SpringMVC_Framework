@@ -23,15 +23,21 @@ import java.util.List;
 public class DispatcherServlet extends HttpServlet {
 
     public String contextPath;
+    public String configXmlFileLocation;
 
     private HandlerMapping handlerMapping;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
+        //获取项目 Application Context
         this.contextPath = getServletContext().getContextPath();
+        //获取 XML 配置文件
+        this.configXmlFileLocation = getServletConfig().
+                getInitParameter("contextConfigLocation").
+                split(":")[1];
         //初始化容器，扫描包获取全类名
-        HzxSpringApplicationContext ioc = new HzxSpringApplicationContext("config.xml");
+        HzxSpringApplicationContext ioc = new HzxSpringApplicationContext(this.configXmlFileLocation);
         try {
             //扫描所有bean的全类名；实例化组件对象
             ioc.init(this.contextPath);
