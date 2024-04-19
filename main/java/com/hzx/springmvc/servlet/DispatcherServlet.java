@@ -1,5 +1,6 @@
 package com.hzx.springmvc.servlet;
 
+import com.hzx.springmvc.bean.User;
 import com.hzx.springmvc.ioc.HzxSpringApplicationContext;
 import com.hzx.springmvc.mapper.HandlerMapper;
 import com.hzx.springmvc.mapper.HandlerMapping;
@@ -10,6 +11,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
@@ -83,6 +85,23 @@ public class DispatcherServlet extends HttpServlet {
                 Object bean = handlerMapper.getBean();
                 method.invoke(bean, request, response);
             }
+        }
+        //如果没有匹配到 URI; 返回 404
+        handleNotFound(request, response);
+    }
+
+    private void handleNotFound(HttpServletRequest request,
+                                HttpServletResponse response) {
+
+        response.setContentType("text/html;charset=utf-8");
+        PrintWriter writer = null;
+        try {
+            writer = response.getWriter();
+            writer.write("<H1>404 NOT FOUND!!! [from DispatcherServlet]</h1>");
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 }

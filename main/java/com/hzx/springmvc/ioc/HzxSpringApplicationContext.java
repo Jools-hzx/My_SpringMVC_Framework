@@ -1,5 +1,6 @@
 package com.hzx.springmvc.ioc;
 
+import com.hzx.springmvc.annotation.AutoWired;
 import com.hzx.springmvc.annotation.Controller;
 import com.hzx.springmvc.annotation.Service;
 import com.hzx.springmvc.utils.SAXParser;
@@ -7,7 +8,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.omg.CORBA.PRIVATE_MEMBER;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -46,6 +49,44 @@ public class HzxSpringApplicationContext {
         executeCreateBeanInstance();
         System.out.println("!!---- 实例化 Bean 对象完成 ----!!");
         System.out.println(singletonObjects);
+        executeAutoWired();
+        System.out.println("!!---- 自动装配完成 -----!!");
+    }
+
+    private void executeAutoWired() throws ClassNotFoundException, IllegalAccessException {
+        //检查输入
+        if (this.singletonObjects.isEmpty()) return;
+        //遍历所有 bean 类
+        Enumeration<String> beanIds = singletonObjects.keys();
+        while (beanIds.hasMoreElements()) {
+            String beanId = beanIds.nextElement();
+            Object beanInstance = singletonObjects.get(beanId);
+            Field[] fields = beanInstance.getClass().getDeclaredFields();
+            for (Field f : fields) {    //判断是否被 AutoWired 注解注释
+                if (f.isAnnotationPresent(AutoWired.class)) {
+                    AutoWired annotation = f.getAnnotation(AutoWired.class);
+                    String fieldName = StringUtils.uncapitalize(f.getType().getSimpleName());
+                    //默认按照类型首字母小写装配
+                    if (!"".equals(annotation.value())) {
+                        //如果 value() 设置不为空；则按照设置的值为待装配名
+                        fieldName = annotation.value();
+                    }
+                    //防止字段为 private修饰，申请权限
+                    f.setAccessible(true);
+                    if (singletonObjects.containsKey(fieldName)) {
+                        f.set(beanInstance, singletonObjects.get(fieldName));
+                    } else if (singletonObjects.containsKey(f.getName())) {
+                        //否则按照字段名尝试装配
+                        f.set(beanInstance, singletonObjects.get(f.getName()));
+                    } else {
+                        //否则装配失败
+                        throw new RuntimeException("Can not AutoWired , Field type:" +
+                                f.getType().getSimpleName() + " Field name:" + f.getName());
+                    }
+                    f.setAccessible(false);
+                }
+            }
+        }
     }
 
     //扫描所有全类名，使用反射判断是否含有注解;
