@@ -1,9 +1,6 @@
 package com.hzx.springmvc.controller;
 
-import com.hzx.springmvc.annotation.AutoWired;
-import com.hzx.springmvc.annotation.Controller;
-import com.hzx.springmvc.annotation.RequestMapping;
-import com.hzx.springmvc.annotation.RequestParam;
+import com.hzx.springmvc.annotation.*;
 import com.hzx.springmvc.bean.User;
 import com.hzx.springmvc.service.UserService;
 import jdk.nashorn.internal.ir.IfNode;
@@ -77,5 +74,14 @@ public class UserController {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @RequestMapping("/user/list/json")
+    @ResponseBody
+    public List listUsersByJson(HttpServletRequest request,
+                                HttpServletResponse response) {
+
+        response.setContentType("text/html;charset=utf-8");
+        return userService.listUsers();
     }
 }

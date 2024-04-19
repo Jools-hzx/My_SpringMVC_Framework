@@ -1,6 +1,9 @@
 package com.hzx.springmvc.servlet;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hzx.springmvc.annotation.RequestParam;
+import com.hzx.springmvc.annotation.ResponseBody;
 import com.hzx.springmvc.ioc.HzxSpringApplicationContext;
 import com.hzx.springmvc.mapper.HandlerMapper;
 import com.hzx.springmvc.mapper.HandlerMapping;
@@ -96,6 +99,12 @@ public class DispatcherServlet extends HttpServlet {
                 Object[] params = executeRequestParamMapping(method, request, response);
                 Object result = method.invoke(bean, params);
 
+                //处理请求转换格式
+                if (method.isAnnotationPresent(ResponseBody.class)) {
+                    executeConvertResponse(result, request, response);
+                    return;
+                }
+
                 response.setContentType("text/html;charset=utf-8");
                 //完成视图解析
                 executeViewResolve(result, request, response);
@@ -104,6 +113,28 @@ public class DispatcherServlet extends HttpServlet {
         }
         //如果没有匹配到 URI; 返回 404
         handleNotFound(request, response);
+    }
+
+    //返回指定格式的信息 [Json]
+    private void executeConvertResponse(Object result,
+                                        HttpServletRequest request,
+                                        HttpServletResponse response)
+            throws JsonProcessingException {
+        //如果注解出现并且返回的类型为 List; 将其转化为 Json 格式字符串
+        if (result instanceof List) {
+            ObjectMapper objectMapper = new ObjectMapper();
+            String jsonStr = objectMapper.writeValueAsString(result);
+            PrintWriter writer = null;
+            response.setContentType("text/json;charset=utf-8");
+            try {
+                writer = response.getWriter();
+                writer.write(jsonStr);
+                writer.flush();
+                writer.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     //该方法完成视图解析功能
