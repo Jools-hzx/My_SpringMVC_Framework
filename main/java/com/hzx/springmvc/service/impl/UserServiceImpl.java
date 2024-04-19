@@ -1,5 +1,6 @@
 package com.hzx.springmvc.service.impl;
 
+import com.hzx.springmvc.annotation.Service;
 import com.hzx.springmvc.service.UserService;
 
 /**
@@ -8,5 +9,6 @@ import com.hzx.springmvc.service.UserService;
  * @date 2024/4/19 18:05
  * @description: TODO
  */
+@Service
 public class UserServiceImpl implements UserService {
 }

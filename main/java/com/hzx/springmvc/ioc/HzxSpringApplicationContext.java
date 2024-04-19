@@ -1,6 +1,7 @@
 package com.hzx.springmvc.ioc;
 
 import com.hzx.springmvc.annotation.Controller;
+import com.hzx.springmvc.annotation.Service;
 import com.hzx.springmvc.utils.SAXParser;
 import org.apache.commons.lang3.StringUtils;
 import org.omg.CORBA.PRIVATE_MEMBER;
@@ -41,7 +42,7 @@ public class HzxSpringApplicationContext {
             scanPackagesGetClassNames(TARGET_PATH, aPackage);
         }
         System.out.println("!!---- 获取全类名完成 ----!!");
-        System.out.println(classFullNames);
+//        System.out.println(classFullNames);
         executeCreateBeanInstance();
         System.out.println("!!---- 实例化 Bean 对象完成 ----!!");
         System.out.println(singletonObjects);
@@ -54,11 +55,23 @@ public class HzxSpringApplicationContext {
         for (String classFullName : classFullNames) {
             Class<?> cls = Class.forName(classFullName);
             Object beanInstance;
-            Controller annotation;
             String beanId = StringUtils.uncapitalize(cls.getSimpleName());
             if (cls.isAnnotationPresent(Controller.class)) {    //实例化注入 Controller 组件对象
                 beanInstance = cls.newInstance();
-                annotation = cls.getAnnotation(Controller.class);
+                Controller annotation = cls.getAnnotation(Controller.class);
+                if (!"".equals(annotation.value())) {
+                    beanId = annotation.value();
+                }
+                singletonObjects.put(beanId, beanInstance);
+            } else if (cls.isAnnotationPresent(Service.class)) {
+                beanInstance = cls.newInstance();
+                Service annotation = cls.getAnnotation(Service.class);
+                Class<?>[] interfaces = cls.getInterfaces();
+                for (Class<?> anInterface : interfaces) {
+                    singletonObjects.put(
+                            StringUtils.uncapitalize(anInterface.getSimpleName()),
+                            beanInstance);
+                }
                 if (!"".equals(annotation.value())) {
                     beanId = annotation.value();
                 }
@@ -70,8 +83,8 @@ public class HzxSpringApplicationContext {
     /**
      * 扫描目标目录下的所有 Class 类
      *
-     * @param target    项目资源的存放目录
-     * @param packageName   待扫描的包
+     * @param target      项目资源的存放目录
+     * @param packageName 待扫描的包
      */
     private void scanPackagesGetClassNames(String target, String packageName) {
         System.out.println("扫描包:" + packageName);
