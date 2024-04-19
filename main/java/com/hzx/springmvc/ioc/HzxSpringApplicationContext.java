@@ -105,4 +105,12 @@ public class HzxSpringApplicationContext {
             }
         }
     }
+
+    public List<String> getClassFullNames() {
+        return classFullNames;
+    }
+
+    public ConcurrentHashMap<String, Object> getSingletonObjects() {
+        return singletonObjects;
+    }
 }

@@ -1,6 +1,7 @@
 package com.hzx.springmvc.servlet;
 
 import com.hzx.springmvc.ioc.HzxSpringApplicationContext;
+import com.hzx.springmvc.mapper.HandlerMapping;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -19,6 +20,8 @@ public class DispatcherServlet extends HttpServlet {
 
     public String contextPath;
 
+    private HandlerMapping handlerMapping;
+
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
@@ -26,7 +29,13 @@ public class DispatcherServlet extends HttpServlet {
         //初始化容器，扫描包获取全类名
         HzxSpringApplicationContext ioc = new HzxSpringApplicationContext("config.xml");
         try {
+            //扫描所有bean的全类名；实例化组件对象
             ioc.init(this.contextPath);
+            //构建处理器执行链
+            this.handlerMapping = new HandlerMapping();
+            handlerMapping.executeHandlerMapping(ioc.getSingletonObjects());
+            System.out.println("!!!---处理器执行链构建完成 ---!!!");
+            System.out.println(handlerMapping.getHandlerMapperList());
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
