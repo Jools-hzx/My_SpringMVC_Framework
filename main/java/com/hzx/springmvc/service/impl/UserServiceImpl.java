@@ -32,4 +32,13 @@ public class UserServiceImpl implements UserService {
     public List<User> listUsers() {
         return users;
     }
+
+    @Override
+    public List<User> listUsersById(String Id) {
+        List<User> results = new ArrayList<>();
+        for (User user : users) {
+            if (user.getId().contains(Id)) results.add(user);
+        }
+        return results;
+    }
 }

@@ -8,4 +8,6 @@ public interface UserService {
 
 
     List<User> listUsers();
+
+    List<User> listUsersById(String Id);
 }

@@ -3,6 +3,7 @@ package com.hzx.springmvc.controller;
 import com.hzx.springmvc.annotation.AutoWired;
 import com.hzx.springmvc.annotation.Controller;
 import com.hzx.springmvc.annotation.RequestMapping;
+import com.hzx.springmvc.annotation.RequestParam;
 import com.hzx.springmvc.bean.User;
 import com.hzx.springmvc.service.UserService;
 
@@ -24,6 +25,24 @@ public class UserController {
 
     @AutoWired
     private UserService userService;
+
+    @RequestMapping("/user/find")
+    public void findUsers(HttpServletRequest request,
+                          HttpServletResponse response,
+                          @RequestParam("key") String name) {
+
+        response.setContentType("text/html;charset=utf-8");
+        List<User> users = userService.listUsersById(name);
+        PrintWriter writer = null;
+        try {
+            writer = response.getWriter();
+            writer.write(users.toString());
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @RequestMapping("/user/list")
     public void listUsers(HttpServletRequest request,
