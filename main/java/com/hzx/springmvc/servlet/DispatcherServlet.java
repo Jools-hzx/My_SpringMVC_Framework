@@ -1,6 +1,7 @@
 package com.hzx.springmvc.servlet;
 
 import com.hzx.springmvc.ioc.HzxSpringApplicationContext;
+import com.hzx.springmvc.mapper.HandlerMapper;
 import com.hzx.springmvc.mapper.HandlerMapping;
 
 import javax.servlet.ServletConfig;
@@ -9,6 +10,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.List;
 
 /**
  * @author Jools He
@@ -49,5 +53,30 @@ public class DispatcherServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         System.out.println("!!! --- DispatcherServlet ----- doPost ----- invoked --- !!!!");
+        try {
+            //分发处理请求
+            executeDispatch(req, resp);
+        } catch (InvocationTargetException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void executeDispatch(HttpServletRequest request, HttpServletResponse response) throws InvocationTargetException, IllegalAccessException {
+        List<HandlerMapper> handlerMapperList = this.handlerMapping.getHandlerMapperList();
+        //检查执行链是否被初始化
+        if (handlerMapperList.isEmpty()) return;
+
+        //获取请求的 uri 映射; 清除无关的项目路径
+        String requestURI = request.getRequestURI().replace(this.contextPath, "");
+        System.out.println("请求的URI:" + requestURI);
+        //遍历所有处理器映射器
+        for (HandlerMapper handlerMapper : handlerMapperList) {
+            if (handlerMapper.getUri().equals(requestURI)) {
+                //如果uri匹配，执行后续操作
+                Method method = handlerMapper.getMethod();
+                Object bean = handlerMapper.getBean();
+                method.invoke(bean, request, response);
+            }
+        }
     }
 }
