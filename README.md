@@ -50,16 +50,6 @@ my_springmvc
 3. 编写 Controller 和 Service 类，并使用自定义注解进行标注。
 4. 使用 Postman 或浏览器发起请求，测试项目功能。
 
-## 测试
-- 使用 Postman 发送请求，测试不同功能的实现。
-- 检查控制台输出，确认 Bean 的创建、注入以及请求分发是否按预期工作。
-
-## 贡献
-欢迎任何形式的贡献，包括但不限于：
-- 报告问题或 bug
-- 提交改进建议
-- 增加新功能
-
 ## 许可证
 本项目遵循 [MIT License](https://opensource.org/licenses/MIT)。
 
